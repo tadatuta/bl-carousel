@@ -1,0 +1,8 @@
+block carousel, elem img {
+    tag: 'img'
+    attrs: {
+        src: this.ctx.url,
+        alt: this.ctx.alt,
+        title: this.ctx.title
+    }
+}

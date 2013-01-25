@@ -1,0 +1,9 @@
+.carousel__control
+{
+    filter: alpha(opacity=50);
+}
+
+.carousel__control:hover
+{
+    filter: alpha(opacity=90);
+}
