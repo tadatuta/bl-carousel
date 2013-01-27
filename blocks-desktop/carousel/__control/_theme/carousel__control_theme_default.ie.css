@@ -1,0 +1,9 @@
+.carousel__control_theme_default
+{
+    filter: alpha(opacity=50);
+}
+
+.carousel__control_theme_default:hover
+{
+    filter: alpha(opacity=90);
+}
