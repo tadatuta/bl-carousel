@@ -35,12 +35,12 @@ BEM port of Twitter Bootstrap carousel
         },
         {
             elem: 'control',
-            elemMods: { type: 'left' },
+            elemMods: { type: 'left', theme: 'default' },
             content: '&lsaquo;'
         },
         {
             elem: 'control',
-            elemMods: { type: 'right' },
+            elemMods: { type: 'right', theme: 'default' },
             content: '&rsaquo;'
         }
     ]
