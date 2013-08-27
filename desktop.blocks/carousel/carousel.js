@@ -1,20 +1,24 @@
-BEM.DOM.decl('carousel',
+modules.define('i-bem__dom', ['jquery'], function(provide, $, DOM) {
+
+DOM.decl('carousel',
 {
     onSetMod: {
-        'js': function() {
-            this.params.pause == 'hover' && this
-                .bindTo('mouseenter', this.pause)
-                .bindTo('mouseleave', this.cycle);
+        js: {
+            inited: function() {
+                this.params.pause == 'hover' && this
+                    .bindTo('mouseenter', this.pause)
+                    .bindTo('mouseleave', this.cycle);
 
-            if (this.params.to) {
-                this.to(this.params.to);
-            } else if (this.params.action) {
-                this[this.params.action]();
-            } else if (this.params.interval) this.cycle();
+                if (this.params.to) {
+                    this.to(this.params.to);
+                } else if (this.params.action) {
+                    this[this.params.action]();
+                } else if (this.params.interval) this.cycle();
 
-            this.bindTo('control', 'click', function(e) {
-                this[this.getMod(e.data.domElem, 'type') == 'right' ? 'next' : 'prev']();
-            });
+                this.bindTo('control', 'click', function(e) {
+                    this[this.getMod($(e.currentTarget), 'type') == 'right' ? 'next' : 'prev']();
+                });
+            }
         }
     },
 
@@ -140,5 +144,9 @@ BEM.DOM.decl('carousel',
             pause: 'hover'
         };
     }
+
+});
+
+provide(DOM);
 
 });
