@@ -1,8 +1,11 @@
-block carousel, elem img {
-    tag: 'img'
-    attrs: {
-        src: this.ctx.url,
-        alt: this.ctx.alt,
-        title: this.ctx.title
-    }
-}
+block('carousel').elem('img')(
+    tag()('img'),
+    attrs()(function() {
+        var ctx = this.ctx;
+        return {
+            src: ctx.url,
+            alt: ctx.alt,
+            title: ctx.title
+        };
+    })
+);

@@ -25,7 +25,7 @@ DOM.decl('carousel',
     cycle: function(e) {
         if (!e) this.paused = false;
 
-        // TODO: use i-system here
+        // TODO: use channels here
         // note: don't drop current implementation support
         this.params.interval && !this.paused && (this.interval = setInterval($.proxy(this.next, this), this.params.interval));
 
@@ -59,7 +59,7 @@ DOM.decl('carousel',
         if (!e) this.paused = true;
 
         if ((this.findElem('item', 'type', 'next').length || this.findElem('item', 'type', 'prev').length) && $.support.transition.end) {
-            this.domElem.trigger($.support.transition.end);
+            this.domElem.emit($.support.transition.end);
             this.cycle();
         }
 
@@ -96,7 +96,7 @@ DOM.decl('carousel',
 
         // TODO: check if mod name slide is ok
         if ($.support.transition && this.hasMod('animate', 'yes')) {
-            this.trigger('slide', { relatedTarget: next[0] }); // TODO: check why we need relatedTarget
+            this.emit('slide', { relatedTarget: next[0] }); // TODO: check why we need relatedTarget
             // if (e.isDefaultPrevented()) return;
             this.setMod(next, 'type', type);
             next[0].offsetWidth; // force reflow
@@ -115,12 +115,12 @@ DOM.decl('carousel',
                     .delMod(active, 'dir')
                     .sliding = false;
 
-                setTimeout(function() { _this.trigger('slid'); }, 0);
+                setTimeout(function() { _this.emit('slid'); }, 0);
             });
 
         } else {
 
-            this.trigger('slide', {
+            this.emit('slide', {
                 relatedTarget: next[0]
             });
 
@@ -129,7 +129,7 @@ DOM.decl('carousel',
             this
                 .delMod(active, 'state')
                 .setMod(next, 'state', 'active')
-                .trigger('slid')
+                .emit('slid')
                 .sliding = false;
         }
 

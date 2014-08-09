@@ -1,3 +1,3 @@
-block carousel {
-    js: true
-}
+block('carousel')(
+    js()(true)
+);

@@ -1,9 +1,8 @@
 ({
     shouldDeps: [
         {
-            block: 'i-jquery',
+            block: 'jquery',
             elems: [{ elem: 'support', mods: { property: 'transition' } }]
-        },
-        { block: 'i-system' }
+        }
     ]
 })
