@@ -1,6 +1,6 @@
-modules.define('i-bem__dom', ['jquery'], function(provide, $, DOM) {
+modules.define('carousel', ['jquery', 'i-bem__dom'], function(provide, $, BEMDOM) {
 
-DOM.decl('carousel',
+provide(BEMDOM.decl('carousel',
 {
     onSetMod: {
         js: {
@@ -22,6 +22,11 @@ DOM.decl('carousel',
         }
     },
 
+    getCurrentSlideIndex: function() {
+        var active = this.findElem('item', 'state', 'active');
+        return this.elem('item').index(active);
+    },
+
     cycle: function(e) {
         if (!e) this.paused = false;
 
@@ -34,9 +39,8 @@ DOM.decl('carousel',
 
     to: function(pos) {
         var _this = this,
-            active = this.findElem('item', 'state', 'active'),
             children = this.elem('item'),
-            activePos = children.index(active);
+            activePos = this.getCurrentSlideIndex();
 
         if (pos > (children.length - 1) || pos < 0) return;
 
@@ -59,7 +63,7 @@ DOM.decl('carousel',
         if (!e) this.paused = true;
 
         if ((this.findElem('item', 'type', 'next').length || this.findElem('item', 'type', 'prev').length) && $.support.transition.end) {
-            this.domElem.emit($.support.transition.end);
+            this.domElem.trigger($.support.transition.end);
             this.cycle();
         }
 
@@ -94,6 +98,8 @@ DOM.decl('carousel',
 
         if (this.hasMod(next, 'state', 'active')) return;
 
+        var nextIdx = this.elem('item').index(next);
+
         // TODO: check if mod name slide is ok
         if ($.support.transition && this.hasMod('animate', 'yes')) {
             this.emit('slide', { relatedTarget: next[0] }); // TODO: check why we need relatedTarget
@@ -115,7 +121,7 @@ DOM.decl('carousel',
                     .delMod(active, 'dir')
                     .sliding = false;
 
-                setTimeout(function() { _this.emit('slid'); }, 0);
+                setTimeout(function() { _this.emit('slid', { currentSlideIndex: nextIdx }); }, 0);
             });
 
         } else {
@@ -129,7 +135,7 @@ DOM.decl('carousel',
             this
                 .delMod(active, 'state')
                 .setMod(next, 'state', 'active')
-                .emit('slid')
+                .emit('slid', { currentSlideIndex: nextIdx })
                 .sliding = false;
         }
 
@@ -145,8 +151,6 @@ DOM.decl('carousel',
         };
     }
 
-});
-
-provide(DOM);
+}));
 
 });
