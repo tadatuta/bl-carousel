@@ -14,21 +14,21 @@ BEM port of Twitter Bootstrap carousel
                     elemMods: { state: 'active' },
                     content: {
                         elem: 'img',
-                        url: 'https://lh5.ggpht.com/sxYdNHOqblPwcd3fCR1sj5gzlib4sy2sl1btHdwA28WVPDxyj6hpXoOT-a4fz4nzKwnX'
+                        url: 'https://raw.githubusercontent.com/bem/bem-identity/master/sign/_theme/sign_theme_batman.png'
                     }
                 },
                 {
                     elem: 'item',
                     content: {
                         elem: 'img',
-                        url: 'https://lh5.ggpht.com/s7830ZGWwOtA2CTApJk0ZvWny7zIbuXaOe5GlqPkknGktUmh9LBM0ojT-tjy-0dp1gM'
+                        url: 'https://raw.githubusercontent.com/bem/bem-identity/master/sign/_theme/sign_theme_spots.png'
                     }
                 },
                 {
                     elem: 'item',
                     content: {
                         elem: 'img',
-                        url: 'https://lh6.ggpht.com/Ar_0ImGRpXy7F1QlXWQmsT6IjKPzqC8uQ9n8JgefpZzZsUK_Xpz2sL8SyFGwVJR37YTH'
+                        url: 'https://raw.githubusercontent.com/bem/bem-identity/master/sign/_theme/sign_theme_captain-america.png'
                     }
                 }
             ]
@@ -36,12 +36,12 @@ BEM port of Twitter Bootstrap carousel
         {
             elem: 'control',
             elemMods: { type: 'left', theme: 'default' },
-            content: '&lsaquo;'
+            content: '‹'
         },
         {
             elem: 'control',
             elemMods: { type: 'right', theme: 'default' },
-            content: '&rsaquo;'
+            content: '›'
         }
     ]
 }

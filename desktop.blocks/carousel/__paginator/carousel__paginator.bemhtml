@@ -7,16 +7,14 @@ block('carousel')(
             if (_this.isSimple(content)) return;
 
             Object.keys(content).forEach(function(key) {
-                key === 'elem' && content[key] == 'item' && items++;
+                key === 'elem' && content[key] === 'item' && items++;
                 countItems(content[key]);
             });
 
             return items;
         }
 
-        this._itemsNumber = countItems(this.ctx.content);
-
-        applyNext();
+        return applyNext({ _itemsNumber: countItems(this.ctx.content) });
     }),
     elem('paginator')(
         mode('button')(function() {
