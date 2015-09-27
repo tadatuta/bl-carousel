@@ -1,0 +1,38 @@
+.carousel_orientation_vertical .carousel__item
+{
+    -webkit-transition: 0.6s ease-in-out top;
+       -moz-transition: 0.6s ease-in-out top;
+         -o-transition: 0.6s ease-in-out top;
+            transition: 0.6s ease-in-out top;
+}
+
+.carousel_orientation_vertical .carousel__item_state_active
+{
+    top: 0;
+}
+
+.carousel_orientation_vertical .carousel__item_type_next
+{
+    top: 100%;
+}
+
+.carousel_orientation_vertical .carousel__item_type_prev
+{
+    top: -100%;
+}
+
+.carousel_orientation_vertical .carousel__item_type_next.carousel__item_dir_top,
+.carousel__item_type_prev.carousel__item_dir_bottom
+{
+    top: 0;
+}
+
+.carousel_orientation_vertical .carousel__item_state_active.carousel__item_dir_top
+{
+    top: -100%;
+}
+
+.carousel_orientation_vertical .carousel__item_state_active.carousel__item_dir_bottom
+{
+    top: 100%;
+}

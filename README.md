@@ -4,7 +4,7 @@ BEM port of Twitter Bootstrap carousel
 ````javascript
 {
     block: 'carousel',
-    mods: { animate: 'yes' },
+    mods: { orientation: 'horizontal', animate: true },
     content: [
         {
             elem: 'inner',

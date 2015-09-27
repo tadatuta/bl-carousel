@@ -5,6 +5,12 @@ provide(BEMDOM.decl('carousel',
     onSetMod: {
         js: {
             inited: function() {
+                var isVertical = this.hasMod('orientation', 'vertical');
+                this._direction = {
+                    next: isVertical ? 'top' : 'left',
+                    prev: isVertical ? 'bottom' : 'right'
+                };
+
                 this.params.pause == 'hover' && this
                     .bindTo('mouseenter', this.pause)
                     .bindTo('mouseleave', this.cycle);
@@ -87,7 +93,7 @@ provide(BEMDOM.decl('carousel',
             active = this.findElem('item', 'state', 'active'),
             next = next || active[type](),
             isCycling = this.interval,
-            direction = type == 'next' ? 'left' : 'right',
+            direction = this._direction[type],
             fallback  = type == 'next' ? 'first' : 'last';
 
         this.sliding = true;
@@ -101,7 +107,7 @@ provide(BEMDOM.decl('carousel',
         var nextIdx = this.elem('item').index(next);
 
         // TODO: check if mod name slide is ok
-        if ($.support.transition && this.hasMod('animate', 'yes')) {
+        if ($.support.transition && this.hasMod('animate')) {
             this.emit('slide', { relatedTarget: next[0] }); // TODO: check why we need relatedTarget
             // if (e.isDefaultPrevented()) return;
             this.setMod(next, 'type', type);
