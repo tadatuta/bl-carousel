@@ -1,0 +1,16 @@
+{
+  "name": "bl-carousel",
+  "version": "3.0.0",
+  "homepage": "https://github.com/tadatuta/bl-carousel",
+  "authors": [
+    "Vladimir Grinenko <i@tadatuta.com>"
+  ],
+  "description": "BEM port of Twitter Bootstrap carousel",
+  "keywords": [
+    "BEM",
+    "b_",
+    "carousel",
+    "blocks"
+  ],
+  "license": "MIT"
+}
