@@ -1,162 +1,169 @@
-modules.define('carousel', ['jquery', 'i-bem__dom'], function(provide, $, BEMDOM) {
+modules.define('carousel', ['jquery', 'i-bem-dom'], function(provide, $, bemDom) {
 
-provide(BEMDOM.decl('carousel',
-{
-    onSetMod: {
-        js: {
-            inited: function() {
-                var isVertical = this.hasMod('orientation', 'vertical');
-                this._direction = {
-                    next: isVertical ? 'top' : 'left',
-                    prev: isVertical ? 'bottom' : 'right'
-                };
+    provide(bemDom.declBlock(this.name, {
+        onSetMod: {
+            js: {
+                inited: function() {
+                    var isVertical = this.hasMod('orientation', 'vertical');
+                    this._direction = {
+                        next: isVertical ? 'top' : 'left',
+                        prev: isVertical ? 'bottom' : 'right',
+                    };
 
-                this.params.pause == 'hover' && this
-                    .bindTo('mouseenter', this.pause)
-                    .bindTo('mouseleave', this.cycle);
+                    this.params.pause == 'hover' && this._domEvents()
+                        .on('mouseenter', this.pause)
+                        .on('mouseleave', this.cycle);
 
-                if (this.params.to) {
-                    this.to(this.params.to);
-                } else if (this.params.action) {
-                    this[this.params.action]();
-                } else if (this.params.interval) this.cycle();
+                    if (this.params.to) {
+                        this.to(this.params.to);
+                    } else if (this.params.action) {
+                        this[this.params.action]();
+                    } else if (this.params.interval) this.cycle();
 
-                this.bindTo('control', 'click', function(e) {
-                    this[this.getMod($(e.currentTarget), 'type') == 'right' ? 'next' : 'prev']();
+                    this._domEvents('control').on('click', function(e) {
+                        this[e.bemTarget.getMod('type') == 'right' ? 'next' : 'prev']();
+                    });
+                },
+            },
+        },
+
+        getCurrentSlideIndex: function() {
+            var active = this.findChildElem({ elem: 'item', modName: 'state', modVal: 'active' });
+            return active.domElem.index();
+        },
+
+        cycle: function(e) {
+            if (!e) this.paused = false;
+
+            // TODO: use channels here
+            // note: don't drop current implementation support
+            this.params.interval &&
+            !this.paused &&
+            (this.interval = setInterval($.proxy(this.next, this), this.params.interval));
+
+            return this;
+        },
+
+        to: function(pos) {
+            var _this = this,
+                children = this._elems('item'),
+                activePos = this.getCurrentSlideIndex();
+
+            if (pos > (children.length - 1) || pos < 0) return;
+
+            if (this.sliding) {
+                return this._events().on('slid', function() {
+                    _this.to(pos);
+                    // TODO: check, originally was `one` binding
+                    _this._events().un('slid');
                 });
             }
-        }
-    },
 
-    getCurrentSlideIndex: function() {
-        var active = this.findElem('item', 'state', 'active');
-        return this.elem('item').index(active);
-    },
+            if (activePos == pos) {
+                return this.pause().cycle();
+            }
 
-    cycle: function(e) {
-        if (!e) this.paused = false;
+            return this.slide(pos > activePos ? 'next' : 'prev');
+        },
 
-        // TODO: use channels here
-        // note: don't drop current implementation support
-        this.params.interval && !this.paused && (this.interval = setInterval($.proxy(this.next, this), this.params.interval));
+        pause: function(e) {
+            if (!e) this.paused = true;
 
-        return this;
-    },
+            if ((this._elem('item').hasMod('type', 'next') || this._elem('item').hasMod('type', 'prev')) && $.support.transition.end) {
+                this.domElem.trigger($.support.transition.end);
+                this.cycle();
+            }
 
-    to: function(pos) {
-        var _this = this,
-            children = this.elem('item'),
-            activePos = this.getCurrentSlideIndex();
+            clearInterval(this.interval);
+            this.interval = null;
+            return this;
+        },
 
-        if (pos > (children.length - 1) || pos < 0) return;
+        next: function() {
+            if (this.sliding) return;
+            return this.slide('next');
+        },
 
-        if (this.sliding) {
-            return this.on('slid', function() {
-                _this.to(pos);
-                // TODO: check, originally was `one` binding
-                _this.un('slid');
-            });
-        }
+        prev: function() {
+            if (this.sliding) return;
+            return this.slide('prev');
+        },
 
-        if (activePos == pos) {
-            return this.pause().cycle();
-        }
+        slide: function(type) {
+            var _this     = this,
+                fallback  = type == 'next' ? 0 : this._elems('item')._entities.length -1,
+                active    = this.findChildElem({ elem: 'item', modName: 'state', modVal: 'active' }),
+                next      = this._elems('item').get(active.domElem[type]().index()) || this._elems('item').get(fallback),
+                isCycling = this.interval,
+                direction = this._direction[type];
 
-        return this.slide(pos > activePos ? 'next' : 'prev', $(children[pos]));
-    },
+            this.sliding = true;
 
-    pause: function(e) {
-        if (!e) this.paused = true;
+            isCycling && this.pause();
 
-        if ((this.findElem('item', 'type', 'next').length || this.findElem('item', 'type', 'prev').length) && $.support.transition.end) {
-            this.domElem.trigger($.support.transition.end);
-            this.cycle();
-        }
+            if (next.hasMod('state', 'active')) return;
 
-        clearInterval(this.interval);
-        this.interval = null;
-        return this;
-    },
+            var nextIdx = next.domElem.index();
 
-    next: function() {
-      if (this.sliding) return;
-      return this.slide('next');
-    },
+            // TODO: check if mod name slide is ok
 
-    prev: function() {
-      if (this.sliding) return;
-      return this.slide('prev');
-    },
+            if ($.support.transition && this.hasMod('animate')) {
+                this._emit('slide', { relatedTarget: next.domElem.get(0) }); // TODO: check why we need relatedTarget
+                // if (e.isDefaultPrevented()) return;
+                next.setMod('type', type);
+                next.domElem.get(0).offsetWidth; // force reflow
 
-    slide: function(type, next) {
-        var _this = this,
-            active = this.findElem('item', 'state', 'active'),
-            next = next || active[type](),
-            isCycling = this.interval,
-            direction = this._direction[type],
-            fallback  = type == 'next' ? 'first' : 'last';
+                active.setMod('dir', direction);
+                next.setMod('dir', direction);
 
-        this.sliding = true;
+                this._domEvents().on($.support.transition.end, function() {
 
-        isCycling && this.pause();
+                    _this._domEvents().un($.support.transition.end);
 
-        next = next.length ? next : this.elem('item')[fallback]();
+                    next
+                        .delMod('type')
+                        .delMod('dir')
+                        .setMod('state', 'active');
 
-        if (this.hasMod(next, 'state', 'active')) return;
+                    active
+                        .delMod('state')
+                        .delMod('dir');
 
-        var nextIdx = this.elem('item').index(next);
+                    _this.sliding = false;
 
-        // TODO: check if mod name slide is ok
-        if ($.support.transition && this.hasMod('animate')) {
-            this.emit('slide', { relatedTarget: next[0] }); // TODO: check why we need relatedTarget
-            // if (e.isDefaultPrevented()) return;
-            this.setMod(next, 'type', type);
-            next[0].offsetWidth; // force reflow
-            this
-                .setMod(active, 'dir', direction)
-                .setMod(next, 'dir', direction);
+                    setTimeout(function() {
+                        _this._emit('slid', { currentSlideIndex: nextIdx });
+                    }, 0);
+                });
 
-            this.bindTo($.support.transition.end, function() {
+            } else {
 
-                _this
-                    .unbindFrom($.support.transition.end)
-                    .delMod(next, 'type')
-                    .delMod(next, 'dir')
-                    .setMod(next, 'state', 'active')
-                    .delMod(active, 'state')
-                    .delMod(active, 'dir')
+                this._emit('slide', {
+                    relatedTarget: next.domElem.get(0),
+                });
+
+                // if (e.isDefaultPrevented()) return;
+
+                active.delMod('state');
+                next.setMod('state', 'active');
+
+                this
+                    ._emit('slid', { currentSlideIndex: nextIdx })
                     .sliding = false;
+            }
 
-                setTimeout(function() { _this.emit('slid', { currentSlideIndex: nextIdx }); }, 0);
-            });
+            isCycling && this.cycle();
 
-        } else {
+            return this;
+        },
 
-            this.emit('slide', {
-                relatedTarget: next[0]
-            });
+        _getDefaultParams: function() {
+            return {
+                interval: 5000,
+                pause: 'hover',
+            };
+        },
 
-            // if (e.isDefaultPrevented()) return;
-
-            this
-                .delMod(active, 'state')
-                .setMod(next, 'state', 'active')
-                .emit('slid', { currentSlideIndex: nextIdx })
-                .sliding = false;
-        }
-
-        isCycling && this.cycle();
-
-        return this;
-    },
-
-    getDefaultParams: function() {
-        return {
-            interval: 5000,
-            pause: 'hover'
-        };
-    }
-
-}));
+    }));
 
 });
