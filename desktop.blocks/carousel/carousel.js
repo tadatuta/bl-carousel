@@ -1,6 +1,6 @@
-modules.define('carousel', ['jquery', 'i-bem__dom'], function(provide, $, BEMDOM) {
+modules.define('carousel', ['jquery', 'i-bem-dom'], function(provide, $, bemDom) {
 
-provide(BEMDOM.decl('carousel',
+provide(bemDom.declBlock(this.name,
 {
     onSetMod: {
         js: {
@@ -11,9 +11,9 @@ provide(BEMDOM.decl('carousel',
                     prev: isVertical ? 'bottom' : 'right'
                 };
 
-                this.params.pause == 'hover' && this
-                    .bindTo('mouseenter', this.pause)
-                    .bindTo('mouseleave', this.cycle);
+                this.params.pause == 'hover' && this._domEvents()
+                    .on('mouseenter', this.pause)
+                    .on('mouseleave', this.cycle);
 
                 if (this.params.to) {
                     this.to(this.params.to);
@@ -21,16 +21,16 @@ provide(BEMDOM.decl('carousel',
                     this[this.params.action]();
                 } else if (this.params.interval) this.cycle();
 
-                this.bindTo('control', 'click', function(e) {
-                    this[this.getMod($(e.currentTarget), 'type') == 'right' ? 'next' : 'prev']();
+                this._domEvents('control').on('click', function(e) {
+                    this[e.bemTarget.getMod('type') == 'right' ? 'next' : 'prev']();
                 });
             }
         }
     },
 
     getCurrentSlideIndex: function() {
-        var active = this.findElem('item', 'state', 'active');
-        return this.elem('item').index(active);
+        var active = this.findChildElem({ elem: 'item', modName: 'state', modVal: 'active' })
+        return active.domElem.index();
     },
 
     cycle: function(e) {
@@ -38,23 +38,25 @@ provide(BEMDOM.decl('carousel',
 
         // TODO: use channels here
         // note: don't drop current implementation support
-        this.params.interval && !this.paused && (this.interval = setInterval($.proxy(this.next, this), this.params.interval));
+        this.params.interval &&
+        !this.paused &&
+        (this.interval = setInterval($.proxy(this.next, this), this.params.interval));
 
         return this;
     },
 
     to: function(pos) {
         var _this = this,
-            children = this.elem('item'),
+            children = this._elems('item'),
             activePos = this.getCurrentSlideIndex();
 
         if (pos > (children.length - 1) || pos < 0) return;
 
         if (this.sliding) {
-            return this.on('slid', function() {
+            return this._domEvents().on('slid', function() {
                 _this.to(pos);
                 // TODO: check, originally was `one` binding
-                _this.un('slid');
+                _this._domEvents().un('slid');
             });
         }
 
@@ -62,13 +64,13 @@ provide(BEMDOM.decl('carousel',
             return this.pause().cycle();
         }
 
-        return this.slide(pos > activePos ? 'next' : 'prev', $(children[pos]));
+        return this.slide(pos > activePos ? 'next' : 'prev', children.get(pos).domElem);
     },
 
     pause: function(e) {
         if (!e) this.paused = true;
 
-        if ((this.findElem('item', 'type', 'next').length || this.findElem('item', 'type', 'prev').length) && $.support.transition.end) {
+        if ((this._elem('item').hasMod('type', 'next') || this._elem('item').hasMod('type', 'prev')) && $.support.transition.end) {
             this.domElem.trigger($.support.transition.end);
             this.cycle();
         }
@@ -79,69 +81,75 @@ provide(BEMDOM.decl('carousel',
     },
 
     next: function() {
-      if (this.sliding) return;
-      return this.slide('next');
+        if (this.sliding) return;
+        return this.slide('next');
     },
 
     prev: function() {
-      if (this.sliding) return;
-      return this.slide('prev');
+        if (this.sliding) return;
+        return this.slide('prev');
     },
 
     slide: function(type, next) {
-        var _this = this,
-            active = this.findElem('item', 'state', 'active'),
-            next = next || active[type](),
+        var _this     = this,
+            fallback  = type == 'next' ? 0 : this._elems('item')._entities.length -1,
+            active    = this.findChildElem({ elem: 'item', modName: 'state', modVal: 'active' }),
+            next      = this._elems('item').get(active.domElem[type]().index()) || this._elems('item').get(fallback),
             isCycling = this.interval,
-            direction = this._direction[type],
-            fallback  = type == 'next' ? 'first' : 'last';
+            direction = this._direction[type];
 
         this.sliding = true;
 
         isCycling && this.pause();
 
-        next = next.length ? next : this.elem('item')[fallback]();
+        if (next.hasMod('state', 'active')) return;
 
-        if (this.hasMod(next, 'state', 'active')) return;
-
-        var nextIdx = this.elem('item').index(next);
+        var nextIdx = next.domElem.index();
 
         // TODO: check if mod name slide is ok
+
         if ($.support.transition && this.hasMod('animate')) {
-            this.emit('slide', { relatedTarget: next[0] }); // TODO: check why we need relatedTarget
+            this._emit('slide', { relatedTarget: next.domElem.get(0) }); // TODO: check why we need relatedTarget
             // if (e.isDefaultPrevented()) return;
-            this.setMod(next, 'type', type);
-            next[0].offsetWidth; // force reflow
-            this
-                .setMod(active, 'dir', direction)
-                .setMod(next, 'dir', direction);
+            next.setMod('type', type);
+            next.domElem.get(0).offsetWidth; // force reflow
 
-            this.bindTo($.support.transition.end, function() {
+            active.setMod('dir', direction)
+            next.setMod('dir', direction);
 
-                _this
-                    .unbindFrom($.support.transition.end)
-                    .delMod(next, 'type')
-                    .delMod(next, 'dir')
-                    .setMod(next, 'state', 'active')
-                    .delMod(active, 'state')
-                    .delMod(active, 'dir')
-                    .sliding = false;
+            this._domEvents().on($.support.transition.end, function() {
 
-                setTimeout(function() { _this.emit('slid', { currentSlideIndex: nextIdx }); }, 0);
+                _this._domEvents().un($.support.transition.end);
+
+                next
+                    .delMod('type')
+                    .delMod('dir')
+                    .setMod('state', 'active');
+
+                active
+                    .delMod('state')
+                    .delMod('dir');
+
+                _this.sliding = false;
+
+                setTimeout(function() {
+                    _this._emit('slid', { currentSlideIndex: nextIdx });
+                }, 0);
             });
 
         } else {
 
-            this.emit('slide', {
-                relatedTarget: next[0]
+            this._emit('slide', {
+                relatedTarget: next.domElem.get(0)
             });
 
             // if (e.isDefaultPrevented()) return;
 
+            active.delMod('state')
+            next.setMod('state', 'active')
+
             this
-                .delMod(active, 'state')
-                .setMod(next, 'state', 'active')
-                .emit('slid', { currentSlideIndex: nextIdx })
+                ._emit('slid', { currentSlideIndex: nextIdx })
                 .sliding = false;
         }
 
@@ -150,7 +158,7 @@ provide(BEMDOM.decl('carousel',
         return this;
     },
 
-    getDefaultParams: function() {
+    _getDefaultParams: function() {
         return {
             interval: 5000,
             pause: 'hover'
