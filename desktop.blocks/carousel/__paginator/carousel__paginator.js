@@ -1,25 +1,31 @@
-modules.define('carousel', ['jquery'], function(provide, $, Carousel) {
-    provide(Carousel.decl({
+modules.define('carousel', ['jquery', 'i-bem-dom'], function(provide, $, bemDom, Carousel) {
+
+    provide(bemDom.declBlock(Carousel, {
         onSetMod: {
             js: {
                 inited: function() {
-                    this.__base.apply(this, arguments);
+                    this.__base();
 
-                    var buttons = this.elem('paginator-button');
-                    this.setMod(buttons.eq(this.getCurrentSlideIndex()), 'state', 'active')
-
-                    this.bindTo(buttons, 'click', function(e) {
-                        this
-                            .pause()
-                            .to(buttons.index($(e.currentTarget)));
+                    var _this   = this;
+                    var buttons = this._elems('paginator-button');
+                    buttons.get(this.getCurrentSlideIndex()).setMod('state', 'active');
+                    buttons.forEach(function(button) {
+                        _this._domEvents(button).on('click', function(e) {
+                            this
+                                .pause(e)
+                                .to($(e.currentTarget).index());
+                        });
                     });
 
-                    this.on('slid', function(e, data) {
-                        this.delMod(buttons, 'state')
-                            .setMod(buttons.eq(data.currentSlideIndex), 'state', 'active');
+                    this._events().on('slid', function(e, data) {
+                        buttons.forEach(function(button) {
+                            if (button.hasMod('state')) button.delMod('state');
+                        });
+                        buttons.get(data.currentSlideIndex).setMod('state', 'active');
                     });
-                }
-            }
-        }
+                },
+            },
+        },
     }));
+
 });
