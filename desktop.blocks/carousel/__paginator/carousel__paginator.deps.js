@@ -1,3 +1,4 @@
 ({
-    shouldDeps: [{ elems: ['paginator-button'] }]
-})
+    mustDeps: [{ elems: ['carousel'] }],
+    shouldDeps: [{ elems: ['paginator-button'] }],
+});
