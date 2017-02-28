@@ -46,10 +46,10 @@ modules.define('carousel', ['jquery', 'i-bem-dom'], function(provide, $, bemDom)
 
         to: function(pos) {
             var _this = this,
-                children = this._elems('item').size(),
+                children = this._elems('item'),
                 activePos = this.getCurrentSlideIndex();
 
-            if (pos > (children - 1) || pos < 0) return;
+            if (pos > (children.size() - 1) || pos < 0) return;
 
             if (this.sliding) {
                 return this._events().on('slid', function() {
@@ -63,7 +63,7 @@ modules.define('carousel', ['jquery', 'i-bem-dom'], function(provide, $, bemDom)
                 return this.pause().cycle();
             }
 
-            return this.slide(pos > activePos ? 'next' : 'prev');
+            return this.slide(pos > activePos ? 'next' : 'prev', children.get(pos));
         },
 
         pause: function(e) {
@@ -89,11 +89,11 @@ modules.define('carousel', ['jquery', 'i-bem-dom'], function(provide, $, bemDom)
             return this.slide('prev');
         },
 
-        slide: function(type) {
+        slide: function(type, next) {
             var _this     = this,
                 fallback  = type == 'next' ? 0 : this._elems('item').size() - 1,
                 active    = this.findChildElem({ elem: 'item', modName: 'state', modVal: 'active' }),
-                next      = this._elems('item').get(active.domElem[type]().index()) || this._elems('item').get(fallback),
+                next      = next || this._elems('item').get(active.domElem[type]().index()) || this._elems('item').get(fallback),
                 isCycling = this.interval,
                 direction = this._direction[type];
 
